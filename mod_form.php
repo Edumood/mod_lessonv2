@@ -110,8 +110,9 @@ class mod_lesson_mod_form extends moodleform_mod {
         $mform->addHelpButton('mediafile', 'mediafile', 'lesson');
         $mform->setAdvanced('mediafile', $lessonconfig->mediafile_adv);
 
-        $mform->addElement('filemanager', 'backgroundimage', get_string('backgroundimage', 'lesson'), null, $filemanageroptions);
-        $mform->addHelpButton('backgroundimage', 'backgroundimage', 'lesson');
+        $mform->addElement('filemanager', 'background', get_string('background', 'lesson'), null, $filemanageroptions);
+        $mform->addHelpButton('mediafile', 'background', 'lesson');
+        $mform->setAdvanced('background', $lessonconfig->mediafile_adv);
 
         $mform->addElement('selectyesno', 'progressbar', get_string('progressbar', 'lesson'));
         $mform->addHelpButton('progressbar', 'progressbar', 'lesson');

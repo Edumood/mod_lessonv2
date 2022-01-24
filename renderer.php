@@ -54,7 +54,7 @@ class mod_lesson_renderer extends plugin_renderer_base {
         $this->page->set_heading($this->page->course->fullname);
         lesson_add_header_buttons($cm, $context, $extraeditbuttons, $lessonpageid);
         $output = $this->output->header();
-
+        $output.="<div style='position: relative;width: 100%;height: 100%;'><div style='position: absolute;width: 100%;height: 100%;'></div></div>";
         if (has_capability('mod/lesson:manage', $context)) {
             $output .= $this->output->heading_with_help($activityname, 'overview', 'lesson');
             // Info box.
@@ -68,7 +68,7 @@ class mod_lesson_renderer extends plugin_renderer_base {
                 ob_end_clean();
             }
         } else {
-            $output .= $this->output->heading($activityname);
+           $output .= $this->output->heading($activityname);
             // Info box.
             if ($lesson->intro) {
                 $output .= $this->output->box(format_module_intro('lesson', $lesson, $cm->id), 'generalbox', 'intro');

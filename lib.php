@@ -47,6 +47,7 @@ function lesson_add_instance($data, $mform) {
 
     $cmid = $data->coursemodule;
     $draftitemid = $data->mediafile;
+    $draftitemidbackground = $data->background;
     $context = context_module::instance($cmid);
 
     lesson_process_pre_save($data);
@@ -56,6 +57,7 @@ function lesson_add_instance($data, $mform) {
     $data->id = $lessonid;
 
     lesson_update_media_file($lessonid, $context, $draftitemid);
+    lesson_update_background_file($lessonid, $context, $draftitemidbackground);
 
     lesson_process_post_save($data);
 
@@ -79,14 +81,17 @@ function lesson_update_instance($data, $mform) {
     $data->id = $data->instance;
     $cmid = $data->coursemodule;
     $draftitemid = $data->mediafile;
+    $draftitemidbackground = $data->background;
     $context = context_module::instance($cmid);
 
     lesson_process_pre_save($data);
 
     unset($data->mediafile);
+    unset($data->background);
     $DB->update_record("lesson", $data);
 
     lesson_update_media_file($data->id, $context, $draftitemid);
+    lesson_update_background_file($data->id, $context, $draftitemidbackground);
 
     lesson_process_post_save($data);
 
@@ -1201,7 +1206,15 @@ function lesson_pluginfile($course, $cm, $context, $filearea, $args, $forcedownl
         }
         $fullpath = "/$context->id/mod_lesson/$filearea/0/".implode('/', $args);
 
-    } else {
+    } else if ($filearea === 'background') {
+        if (count($args) > 1) {
+            // Remove the itemid when it appears to be part of the arguments. If there is only one argument
+            // then it is surely the file name. The itemid is sometimes used to prevent browser caching.
+            array_shift($args);
+        }
+        $fullpath = "/$context->id/mod_lesson/$filearea/0/".implode('/', $args);
+
+    }else {
         return false;
     }
 
@@ -1225,6 +1238,7 @@ function lesson_get_file_areas() {
     $areas = array();
     $areas['page_contents'] = get_string('pagecontents', 'mod_lesson');
     $areas['mediafile'] = get_string('mediafile', 'mod_lesson');
+    $areas['background'] = get_string('background', 'mod_lesson');
     $areas['page_answers'] = get_string('pageanswers', 'mod_lesson');
     $areas['page_responses'] = get_string('pageresponses', 'mod_lesson');
     $areas['essay_responses'] = get_string('essayresponses', 'mod_lesson');
@@ -1260,6 +1274,12 @@ function lesson_get_file_info($browser, $areas, $course, $cm, $context, $fileare
     // Mediafile area does not have sub directories, so let's select the default itemid to prevent
     // the user from selecting a directory to access the mediafile content.
     if ($filearea == 'mediafile' && is_null($itemid)) {
+        $itemid = 0;
+    }
+
+    // Background area does not have sub directories, so let's select the default itemid to prevent
+    // the user from selecting a directory to access the mediafile content.
+    if ($filearea == 'background' && is_null($itemid)) {
         $itemid = 0;
     }
 
@@ -1331,6 +1351,36 @@ function lesson_update_media_file($lessonid, $context, $draftitemid) {
     } else {
         // Set the mediafile column in the lessons table.
         $DB->set_field('lesson', 'mediafile', '', array('id' => $lessonid));
+    }
+}
+
+/**
+ * Update the lesson activity to include any file
+ * that was uploaded, or if there is none, set the
+ * mediafile field to blank.
+ *
+ * @param int $lessonid the lesson id
+ * @param stdClass $context the context
+ * @param int $draftitemid the draft item
+ */
+function lesson_update_background_file($lessonid, $context, $draftitemid) {
+    global $DB;
+
+    // Set the filestorage object.
+    $fs = get_file_storage();
+    // Save the file if it exists that is currently in the draft area.
+    file_save_draft_area_files($draftitemid, $context->id, 'mod_lesson', 'background', 0);
+    // Get the file if it exists.
+    $files = $fs->get_area_files($context->id, 'mod_lesson', 'background', 0, 'itemid, filepath, filename', false);
+    // Check that there is a file to process.
+    if (count($files) == 1) {
+        // Get the first (and only) file.
+        $file = reset($files);
+        // Set the mediafile column in the lessons table.
+        $DB->set_field('lesson', 'background', '/' . $file->get_filename(), array('id' => $lessonid));
+    } else {
+        // Set the mediafile column in the lessons table.
+        $DB->set_field('lesson', 'background', '', array('id' => $lessonid));
     }
 }
 

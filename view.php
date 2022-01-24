@@ -52,6 +52,9 @@ $url = new moodle_url('/mod/lesson/view.php', array('id'=>$id));
 if ($pageid !== null) {
     $url->param('pageid', $pageid);
 }
+
+$PAGE->add_body_class('mod_lesson_test');
+
 $PAGE->set_url($url);
 $PAGE->force_settings_menu();
 
